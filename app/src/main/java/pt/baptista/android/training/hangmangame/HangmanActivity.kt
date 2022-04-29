@@ -2,10 +2,12 @@ package pt.baptista.android.training.hangmangame
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 
 class HangmanActivity : AppCompatActivity() {
@@ -26,6 +28,11 @@ class HangmanActivity : AppCompatActivity() {
             viewModel.loadState(savedInstanceState)
         updateViews()
         butGuess.setOnClickListener { onGuess() }
+
+        viewModel.history.observe(this, Observer { items ->
+            Toast.makeText(this, "History items: ${items.size}", Toast.LENGTH_LONG).show()
+            items.forEach {item -> Log.d("Hangman::history", "${item.id}: $item")  }
+        })
     }
 
     private fun updateViews() {
@@ -33,14 +40,12 @@ class HangmanActivity : AppCompatActivity() {
         txtWrong.text = viewModel.wrongLetters.spaced()
         cvwGallows.steps = viewModel.numErrors
 
-        val gameResultMessage = viewModel.gameResultMessage
-        if (gameResultMessage != null) {
+        viewModel.gameResultMessage?.let { gameResultMessage ->
             txtResult.text = gameResultMessage
             edtLetter.isEnabled = false
             butGuess.isEnabled = false
+            viewModel.saveGame()
         }
-
-        val array = resources.getStringArray(R.array.gess_words)
     }
 
     private fun onGuess() {
